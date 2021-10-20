@@ -1,0 +1,28 @@
+Hanzhe Huang
+10/20/2021
+Project 3
+
+Description:
+This program manages n licenses and logs messages into the logfile through licensed child processes.
+The command line stdin should contain lines in the format of "testsim int int", similarly to the example file testing.data.
+
+Usage:
+./runsim [n] < stdin
+
+Example Usage:
+./runsim 2 < testing.data
+
+Files:
+runsim.c, runsim.h, testsim.c, testing.data, makefile, logfile(optional), README
+
+References:
+https://www.tutorialspoint.com/inter_process_communication/inter_process_communication_shared_memory.htm
+https://stackoverflow.com/questions/19461744/how-to-make-parent-wait-for-all-child-processes-to-finish
+https://www.gnu.org/software/libc/manual/html_node/Example-of-Getopt.html
+http://www.cs.umsl.edu/~sanjiv/classes/cs4760/src/shm.c
+https://www.geeksforgeeks.org/signals-c-set-2/
+https://www.geeksforgeeks.org/bakery-algorithm-in-process-synchronization/
+
+
+Git Repository:
+https://github.com/hhmz8/PJ2
