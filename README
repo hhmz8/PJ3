@@ -4,7 +4,7 @@ Project 3
 
 Description:
 This program manages n licenses and logs messages into the logfile through licensed child processes.
-The command line stdin should contain lines in the format of "testsim int int", similarly to the example file testing.data.
+The command line stdin should contain lines in the format of "testsim int int", similarly to the example file, testing.data.
 
 Usage:
 ./runsim [n] < stdin
@@ -13,7 +13,7 @@ Example Usage:
 ./runsim 2 < testing.data
 
 Files:
-runsim.c, runsim.h, testsim.c, testing.data, makefile, logfile(optional), README
+runsim.c, runsim.h, testsim.c, testing.data, makefile, logfile(generated), README
 
 References:
 https://www.tutorialspoint.com/inter_process_communication/inter_process_communication_shared_memory.htm
@@ -23,6 +23,9 @@ http://www.cs.umsl.edu/~sanjiv/classes/cs4760/src/shm.c
 https://www.geeksforgeeks.org/signals-c-set-2/
 https://www.geeksforgeeks.org/bakery-algorithm-in-process-synchronization/
 
+https://www.tutorialspoint.com/inter_process_communication/inter_process_communication_message_queues.htm
+https://www.geeksforgeeks.org/ipc-using-message-queues/
+
 
 Git Repository:
-https://github.com/hhmz8/PJ2
+https://github.com/hhmz8/PJ3

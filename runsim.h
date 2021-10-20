@@ -26,6 +26,7 @@ void docommand(char* arg1, char* arg2, char* arg3);
 
 #define BUF_SIZE 1024
 #define SHM_KEY 806040
+#define MSG_KEY 806041
 #define MAX_CHAR 20
 #define MAX_PRO 20
 #define MAX_TIME 60

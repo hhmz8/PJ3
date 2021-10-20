@@ -11,6 +11,7 @@ runsim.c
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/types.h>
+#include <sys/msg.h>
 #include <time.h> //time
 #include <sys/wait.h> //wait
 #include <signal.h>
@@ -21,22 +22,37 @@ runsim.c
 
 // Reference: https://www.tutorialspoint.com/inter_process_communication/inter_process_communication_shared_memory.htm
 // Reference: https://stackoverflow.com/questions/19461744/how-to-make-parent-wait-for-all-child-processes-to-finish
+// Reference: https://www.tutorialspoint.com/inter_process_communication/inter_process_communication_message_queues.htm
+// Reference: https://www.geeksforgeeks.org/ipc-using-message-queues/
 
 extern int errno;
 
 struct shmseg {
    int nlicenses;
    int avaliable[MAX_PRO]; //Boolean
-   int choosing[MAX_PRO]; //Boolean
-   int numbers[MAX_PRO]; //Turn #
    char buf[BUF_SIZE];
 };
+
+struct msgbuf {
+   long type;
+   char text[200];
+} msg_t;
 
 int main(int argc, char** argv) {
 	// Signal handlers;
 	signal(SIGINT, sigint_parent);
 	signal(SIGALRM, sigalrm);
 	alarm(MAX_TIME);
+	
+	// Message queue init, also send an empty message
+	int msgid = msgget(MSG_KEY, 0666 | IPC_CREAT);
+	if (msgid == -1) {
+		perror("Error: msgget");
+		exit(-1);
+	}
+	
+	msg_t.type = 1;
+	msgsnd(msgid, &msg_t, sizeof(msg_t), 0);
 	
 	FILE* fptr;
 	int i;
@@ -183,40 +199,18 @@ void child(int id, char* arg1, char* arg2, char* arg3){
 	
 	printf("Child %d with id # %d forked from parent %d.\n",getpid(), id, getppid());
 	
-	// Shared memory
-	struct shmseg *shmp;
-    int shmid = shmget(SHM_KEY, BUF_SIZE, 0666|IPC_CREAT);
-	if (shmid == -1) {
-		perror("Error: shmget");
-		exit(-1);
-	}
-
-	shmp = shmat(shmid, 0, 0);
-
-	// Reference: Lecture video, https://www.geeksforgeeks.org/bakery-algorithm-in-process-synchronization/
-	// Bakery algorithm 
-	int i;
-	int j;
-	int max_number = shmp->numbers[0];
-	shmp->choosing[id] = 1;
-	for (i = 0; i < MAX_PRO; i++) {
-		if (shmp->numbers[i] > max_number){
-			max_number = shmp->numbers[i];
-		}
-	}
-	shmp->numbers[id] = max_number + 1;
-	shmp->choosing[id] = 0;
-	for (j = 0; j < MAX_PRO; j++) {
-		//printf("Child %d with # of %d, testing process %d with # of %d. While: %d \n",getpid(), shmp->numbers[id], j, shmp->numbers[j], (shmp->numbers[j] < shmp->numbers[id]));
-		while (shmp->choosing[j] == 1);
-		while ((shmp->numbers[j] != 0) && (shmp->numbers[j] < shmp->numbers[id] || (shmp->numbers[j] == shmp->numbers[id] && j < id)));
-	}
+	// Reference: Lecture video on message queues 
+	// Recieve message, block if empty, otherwise continue
+	int msgid = msgget(MSG_KEY, 0666 | IPC_CREAT);
+	msgrcv(msgid, &msg_t, sizeof(msg_t), 1, 0);
+	printf("Child %d recieved message.\n", getpid());
 	
 	// Critical section
 	docommand(arg1, arg2, arg3);
 	// Critical secion, end 
-	shmp->numbers[id] = 0;
-	shmp->avaliable[id] = 1;
+	
+	msg_t.type = 1;
+	msgsnd(msgid, &msg_t, sizeof(msg_t), 0);
 	
 	// Return license
 	returnlicense(license());
@@ -224,25 +218,29 @@ void child(int id, char* arg1, char* arg2, char* arg3){
 	exit(0);
 }
 
-// Deallocates shared memory
+// Deallocates shared memory & message queue
 void deallocate(){
-	struct shmseg *shmp;
+	//shm
     int shmid = shmget(SHM_KEY, BUF_SIZE, 0666|IPC_CREAT);
 	if (shmid == -1) {
 		perror("Error: shmget");
-		exit(-1);
-	}
-	shmp = shmat(shmid, 0, 0);
-	
-	if (shmdt(shmp) == -1) {
-		perror("Error: shmdt");
 		exit(-1);
 	}
 	if (shmctl(shmid, IPC_RMID, 0) == -1) {
 		perror("Error: shmctl");
 		exit(-1);
 	}
-	printf("Shared memory deallocated.\n");
+	//msg
+	int msgid = msgget(MSG_KEY, 0666 | IPC_CREAT);
+	if (msgid == -1) {
+		perror("Error: msgget");
+		exit(-1);
+	}
+	if (msgctl(msgid, IPC_RMID, NULL) == -1) {
+		perror("Error: msgctl");
+		exit(-1);
+	}
+	printf("Shared memory & message queue deallocated.\n");
 }
 
 // Returns the shared memory segment / license object
@@ -276,8 +274,6 @@ void initlicense(struct shmseg* shmp, int n){
 	int i;
 	for (i = 0; i < MAX_PRO; i++) {
 		shmp->avaliable[i] = 1;
-		shmp->choosing[i] = 0;
-		shmp->numbers[i] = 0;
 	}
 }
 
