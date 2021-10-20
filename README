@@ -3,7 +3,7 @@ Hanzhe Huang
 Project 3
 
 Description:
-This program manages n licenses and logs messages into the logfile through licensed child processes.
+This program manages n licenses and logs messages into the logfile through licensed child processes, and manages the critical section with the use of a message queue.
 The command line stdin should contain lines in the format of "testsim int int", similarly to the example file, testing.data.
 
 Usage:
